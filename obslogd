@@ -17,82 +17,62 @@
 
 # pylint: disable=broad-except
 # pylint: disable=too-few-public-methods
+# pylint: disable=invalid-name
+# pylint: disable=no-self-use
 
-"""Frontend for interacting with the PDUs and UPSes via SNMP."""
+"""Frontend to the log database."""
 
 import datetime
-import json
-import threading
+import pymysql
 import Pyro4
+import warwick.observatory as observatory
 
-PYRO_HOST = '192.168.0.102'
-PYRO_PORT = 9016
-PYRO_NAME = 'observatory_log_daemon'
+DATABASE_DB = 'ops'
+DATABASE_USER = 'ops'
 
 class ObservatoryLogDaemon:
     """Wraps the observatory log database"""
-    def __init__(self):
-        # TODO: For now we'll just use a json file...
-        # This is horrible for the long term, but should hold us over until we
-        # set up a proper database server
-        self._db_file = '/var/tmp/log.json'
-        self._database_lock = threading.Lock()
-        try:
-            with open(self._db_file, 'r') as infile:
-                self._database = json.load(infile)
-        except Exception:
-            self._database = []
 
-    def __save(self):
-        """Saves the log to disk"""
-        with open(self._db_file, 'w') as outfile:
-            json.dump(self._database, outfile)
-
-    def __log(self, table, message_type, message):
+    def __log(self, source, message_type, message):
         """Logs a message of a given type"""
-        with self._database_lock:
-            self._database.append({
-                'table': table,
-                'type': message_type,
-                'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'),
-                'message': message
-            })
-            self.__save()
+        try:
+            db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER, autocommit=True)
+            with db.cursor() as cur:
+                cur.execute('INSERT INTO obslog (type, source, message) VALUES (' \
+                    + db.escape(message_type) + ', ' + db.escape(source) + ', ' \
+                    + db.escape(message) + ');')
+        except Exception as e:
+            print('failed to insert message with error: ' + str(e))
 
     @Pyro4.expose
-    def log_info(self, table, message):
+    def log_info(self, source, message):
         """Logs an info message"""
-        self.__log(table, 'info', message)
+        self.__log(source, 'info', message)
 
     @Pyro4.expose
-    def log_warning(self, table, message):
+    def log_warning(self, source, message):
         """Logs a warning message"""
-        self.__log(table, 'warning', message)
+        self.__log(source, 'warning', message)
 
     @Pyro4.expose
-    def log_error(self, table, message):
+    def log_error(self, source, message):
         """Logs an error message"""
-        self.__log(table, 'error', message)
+        self.__log(source, 'error', message)
 
     @Pyro4.expose
-    def messages(self, date_string):
-        """Returns messages newer than <date_string>
-           Format should be YYYY-MM-DDTHH:MM:SSZ"""
-        with self._database_lock:
-            return list(filter(lambda e: e['date'] > date_string, self._database))
+    def messages(self, start_time):
+        """Query the database for messages newer than <start_time>.
+           Returns a tuple of (id, date, type, source, message)"""
+        try:
+            datetime.datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            raise ValueError("from_date must be YYYY-MM-DDTHH:MM:SS")
 
-def spawn_daemon():
-    """Spawns the daemon and registers it with Pyro"""
-    Pyro4.config.COMMTIMEOUT = 5
-    Pyro4.config.REQUIRE_EXPOSE = True
-
-    pyro = Pyro4.Daemon(host=PYRO_HOST, port=PYRO_PORT)
-    power = ObservatoryLogDaemon()
-    uri = pyro.register(power, objectId=PYRO_NAME)
-
-    print('Starting observatory log daemon with Pyro ID:', uri)
-    pyro.requestLoop()
-    print('Stopping observatory log daemon with Pyro ID:', uri)
+        db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER)
+        with db.cursor() as cur:
+            cur.execute('SELECT id, date, type, source, message from obslog WHERE date > ' \
+                + db.escape(start_time) + ';')
+            return list(cur)
 
 if __name__ == '__main__':
-    spawn_daemon()
+    observatory.daemons.observatory_log.launch(ObservatoryLogDaemon())

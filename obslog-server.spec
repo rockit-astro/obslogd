@@ -1,12 +1,12 @@
 Name:      onemetre-obslog-server
-Version:   1.0
-Release:   0
+Version:   1.1
+Release:   1
 Url:       https://github.com/warwick-one-metre/obslogd
 Summary:   Log database wrapper for the Warwick one-metre telescope.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python3, python3-Pyro4, python3-warwickobservatory, %{?systemd_requires}
+Requires:  python3, python3-Pyro4, python3-warwickobservatory, python3-PyMySQL, mysql, %{?systemd_requires}
 BuildRequires: systemd-rpm-macros
 
 %description
