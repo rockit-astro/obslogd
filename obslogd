@@ -25,7 +25,7 @@
 import datetime
 import pymysql
 import Pyro4
-import warwick.observatory as observatory
+from warwick.observatory.common import daemons
 
 DATABASE_DB = 'ops'
 DATABASE_USER = 'ops'
@@ -75,4 +75,4 @@ class ObservatoryLogDaemon:
             return list(cur)
 
 if __name__ == '__main__':
-    observatory.daemons.observatory_log.launch(ObservatoryLogDaemon())
+    daemons.observatory_log.launch(ObservatoryLogDaemon())

@@ -21,7 +21,8 @@
 
 import os
 import sys
-import warwick.observatory as observatory
+from warwick.observatory.common import daemons
+from warwick.observatory.common import log
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 
@@ -37,12 +38,11 @@ if __name__ == '__main__':
     table = sys.argv[2]
     message = ' '.join(sys.argv[3:])
     if sys.argv[1] == 'info':
-        sys.exit(observatory.log.info(table, message))
+        sys.exit(log.info(table, message))
     elif sys.argv[1] == 'warning':
-        sys.exit(observatory.log.warning(table, message))
+        sys.exit(log.warning(table, message))
     elif sys.argv[1] == 'error':
-        sys.exit(observatory.log.error(table, message))
+        sys.exit(log.error(table, message))
 
     # Command not found
     sys.exit(print_usage(SCRIPT_NAME))
-
