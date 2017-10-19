@@ -18,8 +18,9 @@ sudo systemctl start obslogd
 
 The first command enables it to start automatically after a reboot, and the second tells it to start immediately (can be omitted if you plan to reboot).
 
-`obslogd` requires a MySQL/MariaDB database on the same machine.  It will attempt to connect to the `ops` database as user `ops` with no password.
-Logs are written to the `obslog` table, which has a schema:
+`obslogd` requires a MySQL/MariaDB database on the same machine.  See the instructions in the [weather log daemon](https://github.com/warwick-one-metre/weatherlogd) (which runs on the same machine) for the instructions on how to create the database.
+
+Logs are written to the `obslog` table, which should be created using:
 
 ```sql
 CREATE TABLE `obslog` (
