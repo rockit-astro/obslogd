@@ -18,6 +18,12 @@ sudo systemctl start obslogd
 
 The first command enables it to start automatically after a reboot, and the second tells it to start immediately (can be omitted if you plan to reboot).
 
+Next, open a port in the firewall so that other machines on the network can access the daemon:
+```
+sudo firewall-cmd --zone=public --add-port=9016/tcp --permanent
+sudo firewall-cmd --reload
+```
+
 `obslogd` requires a MySQL/MariaDB database on the same machine.  See the instructions in the [weather log daemon](https://github.com/warwick-one-metre/weatherlogd) (which runs on the same machine) for the instructions on how to create the database.
 
 Logs are written to the `obslog` table, which should be created using:
