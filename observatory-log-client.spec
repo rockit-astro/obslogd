@@ -1,12 +1,12 @@
 Name:      observatory-log-client
-Version:   2.1
+Version:   2.1.1
 Release:   0
 Url:       https://github.com/warwick-one-metre/obslogd
 Summary:   Log database helper for the Warwick one-metre telescope.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python36, python36-warwick-observatory-common
+Requires:  python3, python3-warwick-observatory-common
 
 %description
 Part of the observatory software for the Warwick one-meter telescope.
