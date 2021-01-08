@@ -1,4 +1,4 @@
-## Warwick common observatory logging code [![Travis CI build status](https://travis-ci.org/warwick-one-metre/obslogd.svg?branch=master)](https://travis-ci.org/warwick-one-metre/obslogd)
+## Warwick common observatory logging code
 
 Part of the observatory software for the Warwick one-meter telescope.
 
