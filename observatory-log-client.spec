@@ -1,17 +1,14 @@
 Name:      observatory-log-client
-Version:   2.1.1
+Version:   20220722
 Release:   0
 Url:       https://github.com/warwick-one-metre/obslogd
-Summary:   Log database helper for the Warwick one-metre telescope.
+Summary:   Log database helper for the Warwick La Palma telescopes.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python3, python3-warwick-observatory-common
+Requires:  python3 python3-warwick-observatory-common
 
 %description
-Part of the observatory software for the Warwick one-meter telescope.
-
-obslog is a commandline utility for writing messages into the log database.
 
 %build
 mkdir -p %{buildroot}%{_bindir}

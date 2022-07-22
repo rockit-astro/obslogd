@@ -6,7 +6,7 @@ Part of the observatory software for the Warwick one-meter telescope.
 
 `obslog` is a utility for writing messages into the log database from the commandline.
 
-See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Software-Infrastructure) for an overview of the W1m software architecture and instructions for developing and deploying the code.
+See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Software-Infrastructure) for an overview of the observatory software architecture and instructions for developing and deploying the code.
 
 ### Software Setup
 
