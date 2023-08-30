@@ -1,34 +1,30 @@
 #!/usr/bin/env python3
 #
-# This file is part of powerd.
+# This file is part of the Robotic Observatory Control Kit (rockit)
 #
-# powerd is free software: you can redistribute it and/or modify
+# rockit is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# powerd is distributed in the hope that it will be useful,
+# rockit is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with powerd.  If not, see <http://www.gnu.org/licenses/>.
-
-# pylint: disable=broad-except
-# pylint: disable=too-few-public-methods
-# pylint: disable=invalid-name
-# pylint: disable=no-self-use
+# along with rockit.  If not, see <http://www.gnu.org/licenses/>.
 
 """Frontend to the log database."""
 
 import datetime
 import pymysql
 import Pyro4
-from warwick.observatory.common import daemons
+from rockit.common import daemons
 
 DATABASE_DB = 'ops'
 DATABASE_USER = 'ops'
+
 
 class ObservatoryLogDaemon:
     """Wraps the observatory log database"""
@@ -38,9 +34,9 @@ class ObservatoryLogDaemon:
         try:
             db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER, autocommit=True)
             with db.cursor() as cur:
-                cur.execute('INSERT INTO obslog (type, source, message) VALUES (' \
-                    + db.escape(message_type) + ', ' + db.escape(source) + ', ' \
-                    + db.escape(message) + ');')
+                cur.execute(
+                    'INSERT INTO obslog (type, source, message) VALUES (%s, %s, %s);',
+                    (message_type, source, message))
         except Exception as e:
             print('failed to insert message with error: ' + str(e))
 
@@ -65,14 +61,14 @@ class ObservatoryLogDaemon:
            Returns a tuple of (id, date, type, source, message)"""
         try:
             datetime.datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S')
-        except ValueError:
-            raise ValueError("from_date must be YYYY-MM-DDTHH:MM:SS")
+        except ValueError as e:
+            raise ValueError("from_date must be YYYY-MM-DDTHH:MM:SS") from e
 
         db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER)
         with db.cursor() as cur:
-            cur.execute('SELECT id, date, type, source, message from obslog WHERE date > ' \
-                + db.escape(start_time) + ';')
+            cur.execute('SELECT id, date, type, source, message from obslog WHERE date > %s;', (start_time,))
             return list(cur)
+
 
 if __name__ == '__main__':
     daemons.observatory_log.launch(ObservatoryLogDaemon())

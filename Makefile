@@ -6,7 +6,12 @@ RPMBUILD = rpmbuild --define "_topdir %(pwd)/build" \
 
 all:
 	mkdir -p build
-	${RPMBUILD} -ba observatory-log-server.spec
-	${RPMBUILD} -ba observatory-log-client.spec
+	${RPMBUILD} --define "_version $$(date --utc +%Y%m%d%H%M%S)" -ba rockit-obslog.spec
 	mv build/noarch/*.rpm .
 	rm -rf build
+
+install:
+	@cp obslogd /bin/
+	@cp obslogd@.service /usr/lib/systemd/system/
+	@echo ""
+	@echo "Installed server and service files."
