@@ -17,22 +17,63 @@
 
 """Frontend to the log database."""
 
+import argparse
 import datetime
+import json
 import pymysql
 import Pyro4
-from rockit.common import daemons
+from rockit.common import daemons, validation
 
-DATABASE_DB = 'ops'
-DATABASE_USER = 'ops'
+
+CONFIG_SCHEMA = {
+    'type': 'object',
+    'additionalProperties': False,
+    'required': ['daemon', 'database_db', 'database_user'],
+    'properties': {
+        'daemon': {
+            'type': 'string',
+            'daemon_name': True
+        },
+        'database_db': {
+            'type': 'string'
+        },
+        'database_user': {
+            'type': 'string'
+        }
+    }
+}
+
+
+class Config:
+    """Daemon configuration parsed from a json file"""
+    def __init__(self, config_filename):
+        # Will throw on file not found or invalid json
+        with open(config_filename, 'r', encoding='utf-8') as config_file:
+            config_json = json.load(config_file)
+
+        # Will throw on schema violations
+        validation.validate_config(config_json, CONFIG_SCHEMA, {
+            'daemon_name': validation.daemon_name_validator
+        })
+
+        self.daemon = getattr(daemons, config_json['daemon'])
+        self.database_db = config_json['database_db']
+        self.database_user = config_json['database_user']
 
 
 class ObservatoryLogDaemon:
     """Wraps the observatory log database"""
+    def __init__(self, config):
+        self._config = config
 
     def __log(self, source, message_type, message):
         """Logs a message of a given type"""
         try:
-            db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER, autocommit=True)
+            db = pymysql.connect(
+                db=self._config.database_db,
+                user=self._config.database_user,
+                autocommit=True)
+
             with db.cursor() as cur:
                 cur.execute(
                     'INSERT INTO obslog (type, source, message) VALUES (%s, %s, %s);',
@@ -64,11 +105,18 @@ class ObservatoryLogDaemon:
         except ValueError as e:
             raise ValueError("from_date must be YYYY-MM-DDTHH:MM:SS") from e
 
-        db = pymysql.connect(db=DATABASE_DB, user=DATABASE_USER)
+        db = pymysql.connect(
+            db=self._config.database_db,
+            user=self._config.database_user)
+
         with db.cursor() as cur:
             cur.execute('SELECT id, date, type, source, message from obslog WHERE date > %s;', (start_time,))
             return list(cur)
 
 
 if __name__ == '__main__':
-    daemons.observatory_log.launch(ObservatoryLogDaemon())
+    parser = argparse.ArgumentParser(description='Environment Server')
+    parser.add_argument('config', help='Path to configuration json file')
+    args = parser.parse_args()
+    c = Config(args.config)
+    c.daemon.launch(ObservatoryLogDaemon(c))

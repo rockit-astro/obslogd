@@ -1,0 +1,5 @@
+{
+  "daemon": "warwick_log",
+  "database_db": "ops",
+  "database_user": "ops"
+}
